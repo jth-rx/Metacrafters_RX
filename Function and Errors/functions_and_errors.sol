@@ -1,34 +1,55 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.8.18;
 
-contract myContract {
-    uint256 public balance;
-    address public owner;
+contract MyContract {
+    // Public variables for ticket system
+    string public eventName = "METACRAFTER'S EXPO";
+    string public ticketSymbol = "TICKET";
+    uint public totalTickets = 0;
+    
+    // Mapping to store the ticket balances for each attendee
+    mapping(address => uint) public ticketBalances;
 
-    constructor() {
-        owner = msg.sender; // Set the owner to the address deploying the contract
+    // Modifier to check if an attendee has any tickets
+    modifier hasTickets(address _attendee) {
+        require(ticketBalances[_attendee] > 0, "Attendee has no tickets.");
+        _;
     }
 
-    // Function to deposit funds with a require() check
-    function deposit(uint256 amount) public {
-        require(amount > 0, "Amount must be greater than zero");
-        balance += amount;
+    // Mint function to issue new tickets to attendees
+    function issueTickets(address _attendee, uint _ticketAmount) public {
+        require(_ticketAmount > 0, "Ticket amount must be greater than 0.");
+
+        totalTickets += _ticketAmount;
+        ticketBalances[_attendee] += _ticketAmount;
+
+        // Using assert to verify total tickets is not zero after issuing tickets
+        assert(totalTickets > 0); 
     }
 
-    // Function to withdraw funds with require() and assert()
-    function withdraw(uint256 amount) public {
-        require(msg.sender == owner, "Only the owner can withdraw");
-        require(amount <= balance, "Insufficient balance");
+    // Burn function for attendees to use or cancel tickets
+    function useTickets(address _attendee, uint _ticketAmount) public hasTickets(_attendee) {
+        require(_ticketAmount > 0, "Ticket amount must be greater than 0.");
+        require(ticketBalances[_attendee] >= _ticketAmount, "Not enough tickets to use.");
 
-        balance -= amount;
-        assert(balance >= 0); // Ensure balance doesn't go negative
+        ticketBalances[_attendee] -= _ticketAmount;
+        totalTickets -= _ticketAmount;
+
+        // Assert to check no underflow occurred in total tickets
+        assert(totalTickets >= 0);
     }
 
-    // Function to reset balance with a revert example
-    function resetBalance() public {
-        if (msg.sender != owner) {
-            revert("Only the owner can reset the balance");
+    // Function to check the ticket balance of a specific attendee
+    function checkTicketBalance(address _attendee) public view returns (uint) {
+        return ticketBalances[_attendee];
+    }
+
+    // Function to cancel all tickets if the event is postponed or canceled
+    function cancelAllTickets() public {
+        if (totalTickets == 0) {
+            revert("No tickets to cancel.");
         }
-        balance = 0;
+
+        totalTickets = 0;
     }
 }
