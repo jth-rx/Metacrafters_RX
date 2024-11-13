@@ -74,9 +74,7 @@ contract MyContract {
         totalTickets = 0;
     }
 }
-
-
-
+```
 3. **Compile the Code**  
    In the Remix IDE, select the "Solidity Compiler" tab from the sidebar on the left. Ensure the compiler version is set to 0.8.0 or higher, then click "Compile SimpleSmartContract.sol".
 
