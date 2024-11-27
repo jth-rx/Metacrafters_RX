@@ -1,0 +1,72 @@
+{
+	"id": "71306853cab7b3f991e9814c78b902e3",
+	"_format": "hh-sol-build-info-1",
+	"solcVersion": "0.8.26",
+	"solcLongVersion": "0.8.26+commit.8a97fa7a",
+	"input": {
+		"language": "Solidity",
+		"sources": {
+			"Degen/degen_token/contracts/DegenToken.sol": {
+				"content": "// // SPDX-License-Identifier: MIT\n// pragma solidity ^0.8.18;\n\n// import \"@openzeppelin/contracts/token/ERC20/ERC20.sol\";\n// import \"@openzeppelin/contracts/access/Ownable.sol\";\n\n// contract DegenToken is ERC20, Ownable {\n//     // Structure to represent an in-game item\n//     struct InGameItem {\n//         uint256 id;\n//         string name;\n//         uint256 price;\n//     }\n\n//     InGameItem[] public inGameItems; // List of in-game items\n\n//     // Constructor\n//     constructor() ERC20(\"Degen\", \"DGN\") {\n//         // Initialize some in-game items\n//         inGameItems.push(InGameItem(1, \"Bored Aps NFT\", 10));\n//         inGameItems.push(InGameItem(2, \"$20 Steam Gift Card\", 20));\n//         inGameItems.push(InGameItem(3, \"$50 Amazon Gift Card\", 50));\n//     }\n\n//     // Mint new tokens to another address\n//     function mint(address to, uint256 amount) public onlyOwner {\n//         _mint(to, amount);\n//     }\n\n//     // Transfer tokens to another address\n//     function transferTokens(address to, uint256 amount) public {\n//         require(amount > 0, \"Transfer amount must be greater than 0\");\n//         require(balanceOf(msg.sender) >= amount, \"Insufficient balance\");\n\n//         _transfer(msg.sender, to, amount);\n//     }   \n\n//     // Redeem tokens for items\n//     function redeemTokens(uint256 itemId) public {\n//         require(itemId < inGameItems.length, \"Invalid item ID\");\n\n//         InGameItem storage item = inGameItems[itemId];\n//         require(balanceOf(msg.sender) >= item.price, \"Insufficient balance\");\n\n//         _burn(msg.sender, item.price);\n//     }\n\n//     // Check token balance of an address\n//     function checkTokenBalance(address account) public view returns (uint256) {\n//         return balanceOf(account);\n//     }\n\n//     // Burn tokens\n//     function burnTokens(uint256 amount) public {\n//         require(amount > 0, \"Burn amount must be greater than 0\");\n//         require(balanceOf(msg.sender) >= amount, \"Insufficient balance\");\n\n//         _burn(msg.sender, amount);\n//     }\n// }\n\n"
+			}
+		},
+		"settings": {
+			"optimizer": {
+				"enabled": false,
+				"runs": 200
+			},
+			"outputSelection": {
+				"*": {
+					"": [
+						"ast"
+					],
+					"*": [
+						"abi",
+						"metadata",
+						"devdoc",
+						"userdoc",
+						"storageLayout",
+						"evm.legacyAssembly",
+						"evm.bytecode",
+						"evm.deployedBytecode",
+						"evm.methodIdentifiers",
+						"evm.gasEstimates",
+						"evm.assembly"
+					]
+				}
+			},
+			"remappings": []
+		}
+	},
+	"output": {
+		"errors": [
+			{
+				"component": "general",
+				"errorCode": "3420",
+				"formattedMessage": "Warning: Source file does not specify required compiler version! Consider adding \"pragma solidity ^0.8.26;\"\n--> Degen/degen_token/contracts/DegenToken.sol\n\n",
+				"message": "Source file does not specify required compiler version! Consider adding \"pragma solidity ^0.8.26;\"",
+				"severity": "warning",
+				"sourceLocation": {
+					"end": -1,
+					"file": "Degen/degen_token/contracts/DegenToken.sol",
+					"start": -1
+				},
+				"type": "Warning"
+			}
+		],
+		"sources": {
+			"Degen/degen_token/contracts/DegenToken.sol": {
+				"ast": {
+					"absolutePath": "Degen/degen_token/contracts/DegenToken.sol",
+					"exportedSymbols": {},
+					"id": 1,
+					"license": "MIT",
+					"nodeType": "SourceUnit",
+					"nodes": [],
+					"src": "2053:0:0"
+				},
+				"id": 0
+			}
+		}
+	}
+}
