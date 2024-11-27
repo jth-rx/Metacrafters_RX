@@ -1,48 +1,74 @@
-# Degen Token (ERC-20): Unlocking the Future of Gaming
+# DegenToken Smart Contract
 
-## Description
+## Overview
+The `DegenToken` smart contract is a decentralized token system built using Solidity. It includes features for minting, transferring, burning tokens, and redeeming token-based battlepasses. The contract utilizes the ERC-20 token standard and extends the `Ownable` contract from OpenZeppelin for access control.
 
-Welcome to the Degen Token smart contract – an ERC-20 token designed to bring exciting features to the gaming world.
+## Features
+- **ERC-20 Token**: The contract implements an ERC-20 token with the name "Degen" and the symbol "DGN".
+- **Battlepass System**: Users can redeem tokens for a variety of battlepass upgrades, which provide different benefits.
+- **Minting**: The contract owner can mint new tokens to any address.
+- **Transferring Tokens**: Users can transfer tokens to others within the system.
+- **Burning Tokens**: Users can burn their tokens to reduce their balance.
+- **Redeeming Battlepasses**: Users can redeem tokens to acquire different battlepass upgrades, which are stored in a mapping for each address.
 
-The contract has five functions: 
-- Minting Tokens
-- Burning Tokens
-- Transferring Tokens
-- Redeeming Tokens
-- Checking Token Balances
+## Contract Structure
 
-## Getting Started
+### `battlePass` Struct
+The `battlePass` struct represents a battlepass upgrade with the following properties:
+- `id`: Unique identifier for the battlepass.
+- `title`: Title of the battlepass.
+- `description`: Description of the benefits of the battlepass.
+- `cost`: The cost (in tokens) to redeem the battlepass.
 
-### Executing program
+### `battlePasses` Array
+A list of available battlepass upgrades, initialized in the constructor.
 
-To interact with the Degen Token smart contract using Remix, Metamask, and Snowtrace on the Avalanche FujiTest network, follow these step-by-step instructions:
+### `redeemedBattlepass` Mapping
+A mapping that keeps track of which battlepasses have been redeemed by each user.
 
-1. Deploy the Contract:
+## Functions
 
-- Open Remix IDE and deploy the Degen Token contract. Ensure you are connected to the Avalanche FujiTest network in Remix.
-- Confirm the deployment transaction using Metamask.
+### 1. `constructor()`
+Initializes the ERC-20 token with the name "Degen" and symbol "DGN", and sets up some default battlepass upgrades:
+- **Bronze Pass**: Costs 5 tokens.
+- **Silver Pass**: Costs 10 tokens.
+- **Gold Pass**: Costs 15 tokens.
 
-2. Mint Tokens:
+### 2. `mint(address to, uint256 amount)`
+Mints new tokens and sends them to the specified address. Only the contract owner can call this function.
 
-- After deployment, as the contract owner, mint new tokens to specific addresses.
-- Use the mint function in Remix, providing the recipient's address and the amount of tokens to mint.
+### 3. `transferTokens(address to, uint256 amount)`
+Transfers a specified amount of tokens to another address. The sender must have sufficient balance.
 
-3. Transfer Tokens:
+### 4. `getRedeemedBattlepass(address account)`
+Returns an array of redeemed battlepass IDs for a given user.
 
-- Users can transfer tokens between addresses using the transferTokens function.
-- Specify the recipient's address and the amount of tokens to transfer.
+### 5. `storeRedeemedBattlepass(address user, uint256 itemId)`
+Stores the redeemed battlepass ID for a user. This function is used internally by the contract when a user redeems a battlepass.
 
-4. Redeem Tokens:
+### 6. `redeemBattlepass(uint256 upgradeId)`
+Allows a user to redeem a battlepass upgrade by burning tokens. The user must have sufficient tokens to redeem the selected battlepass.
 
-- Redeem tokens for in-game items using the redeemTokens function. Connect to Avalanche FujiTest in Remix for a realistic scenario.
-- Provide the item ID corresponding to the in-game item you wish to redeem.
+### 7. `checkTokenBalance(address account)`
+Returns the token balance of a specified account.
 
-5. Check Token Balances:
+### 8. `burnTokens(uint256 amount)`
+Allows the user to burn a specified amount of tokens, reducing their balance.
 
-- Users can check their token balances using the checkTokenBalance function in Remix.
-- Input the address for which you want to check the token balance.
+## Requirements
+- Solidity ^0.8.18
+- OpenZeppelin Contracts:
+  - ERC20
+  - Ownable
+
+## Deployment
+To deploy this contract, follow these steps:
+
+1. Install dependencies using npm:
+   ```bash
+   npm install @openzeppelin/contracts
+
 
 ## Author
-
-Kyle Español
-[@kylekce](https://github.com/kylekce)
+Jethro Emmanuel C. Roxas
+202110139
