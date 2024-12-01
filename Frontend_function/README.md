@@ -1,95 +1,57 @@
-# Assessment Contract
+# Assessment Smart Contract
 
-This project contains a Solidity smart contract called **Assessment** that manages deposits and withdrawals of ETH. The owner of the contract can perform the following actions:
+## Overview
 
-- Deposit ETH into the contract.
-- Withdraw a specific amount of ETH.
-- Withdraw all ETH from the contract.
-- Logout to the website.
-
-The project also includes a front-end application to interact with the smart contract using MetaMask.
-
-## Prerequisites
-
-Ensure you have the following installed on your system:
-
-- [Node.js](https://nodejs.org/) (LTS version recommended)
-- [npm](https://www.npmjs.com/) (comes with Node.js)
-- [MetaMask](https://metamask.io/) extension installed in your browser
-
-## Getting Started
-
-After cloning the GitHub repository, follow these steps to set up and run the project:
-
-### 1. Install Dependencies
-
-Navigate to the project directory in your terminal and run:
-
-```bash
-npm install
-```
-
-This will install all the necessary dependencies required for the project.
-
-### 2. Start a Local Blockchain
-
-Open a second terminal in your project directory and start a local blockchain using Hardhat:
-
-```bash
-npx hardhat node
-```
-
-### 3. Deploy the Smart Contract
-
-Open a third terminal in your project directory and deploy the contract to the local blockchain:
-
-```bash
-npx hardhat run --network localhost scripts/deploy.js
-```
-
-### 4. Launch the Front-End
-
-Return to the first terminal and run:
-
-```bash
-npm run dev
-```
-
-This will start the development server, and the front-end application will be available at:
-
-```
-http://localhost:3000/
-```
+The Assessment smart contract is a Solidity-based decentralized application (dApp) that manages community donations with controlled fund withdrawal mechanisms. It allows users to donate funds and provides the contract owner with the ability to withdraw donations once a specified threshold is met.
 
 ## Features
 
-### Contract Functions
+- **Donation Functionality**
+  - Users can donate any amount of cryptocurrency
+  - Tracks total donations and individual donor contributions
+  - Emits events for each donation received
 
-1. **`getBalance`**
-   - Returns the current balance of the contract.
+- **Controlled Withdrawal**
+  - Only the contract owner can withdraw funds
+  - Withdrawal is only possible after a predefined donation threshold is reached
+  - Automatically resets total donations after withdrawal
 
-2. **`deposit`**
-   - Allows the owner to deposit a specific amount of ETH into the contract.
+- **Threshold Management**
+  - Owner can update the withdrawal threshold dynamically
+  - Ensures flexibility in fund collection strategy
 
-3. **`withdraw`**
-   - Allows the owner to withdraw a specific amount of ETH from the contract.
+## Contract Functions
 
-4. **`withdrawAll`**
-   - Allows the owner to withdraw all ETH from the contract.
-  
-5. **`Logout`**
-   - Allows the owner to logout to the website.
+### `donate()`
+- Allows users to contribute funds to the contract
+- Requires donation amount to be greater than zero
+- Updates individual and total donation tracking
+- Emits a `DonationReceived` event
 
-### Front-End Interaction
+### `withdrawFunds()`
+- Exclusive to contract owner
+- Withdraws entire contract balance
+- Requires total donations to meet or exceed threshold
+- Resets total donations to zero after withdrawal
+- Emits a `FundsWithdrawn` event
 
-- Connect your MetaMask wallet to interact with the contract.
-- Perform deposit and withdrawal actions through the web interface.
+### `updateThreshold(uint256 _newThreshold)`
+- Allows owner to modify the withdrawal threshold
+- Requires new threshold to be greater than zero
+- Emits a `ThresholdUpdated` event
 
-## Notes
+### View Functions
+- `getTotalDonations()`: Returns current total donations
+- `getDonationOf(address _donor)`: Retrieves donation amount for a specific address
 
-- Make sure MetaMask is connected to the same local blockchain (Hardhat) network.
-- Use the account provided by Hardhat when interacting with the contract as the owner.
+## Security Considerations
+- Uses `require()` statements for access control and validation
+- Implements `assert()` for critical state checks
+- Follows best practices for fund management in Solidity
 
-## License
+## Development Environment
+- Solidity Version: ^0.8.9
+- License: UNLICENSED
 
-This project is licensed under the [UNLICENSED](https://choosealicense.com/licenses/unlicense/) license.
+## Author
+Jethro Emmanuel C. Roxas
