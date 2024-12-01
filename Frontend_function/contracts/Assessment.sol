@@ -1,72 +1,72 @@
-// SPDX-License-Identifier: UNLICENSED
+// // SPDX-License-Identifier: UNLICENSED
+
 pragma solidity ^0.8.9;
 
 contract Assessment {
     address payable public owner;
-    uint256 public balance;
+    uint256 public totalDonations;
+    uint256 public withdrawalThreshold;
+    mapping(address => uint256) public donations;
 
-    event Deposit(uint256 amount);
-    event Withdraw(uint256 amount);
+    event DonationReceived(address indexed donor, uint256 amount);
+    event FundsWithdrawn(address indexed owner, uint256 amount);
+    event ThresholdUpdated(uint256 newThreshold);
 
-    constructor(uint initBalance) payable {
+    constructor(uint256 _initialThreshold) payable {
         owner = payable(msg.sender);
-        balance = initBalance;
+        withdrawalThreshold = _initialThreshold;
+        totalDonations = 0;
     }
 
-    function getBalance() public view returns(uint256) {
-        return balance;
+    // Function to make a donation to the community fund
+    function donate() public payable {
+        require(msg.value > 0, "Donation amount must be greater than zero");
+
+        uint256 previousBalance = totalDonations;
+        donations[msg.sender] += msg.value;
+        totalDonations += msg.value;
+
+        // Assert ensures the total balance is updated correctly
+        assert(totalDonations == previousBalance + msg.value);
+
+        emit DonationReceived(msg.sender, msg.value);
     }
 
-    function deposit(uint256 _amount) public payable {
-        uint _previousBalance = balance;
+    // Owner can withdraw funds only if the threshold is met
+    function withdrawFunds() public {
+        require(msg.sender == owner, "Only the owner can withdraw funds");
+        require(totalDonations >= withdrawalThreshold, "Threshold not reached");
 
-        // Make sure this is the owner
-        require(msg.sender == owner, "You are not the owner of this account");
+        uint256 previousBalance = totalDonations;
+        uint256 amountToWithdraw = totalDonations;
+        totalDonations = 0;
 
-        // Perform transaction
-        balance += _amount;
+        (bool success, ) = owner.call{value: amountToWithdraw}("");
+        require(success, "Withdrawal failed");
 
-        // Assert transaction completed successfully
-        assert(balance == _previousBalance + _amount);
+        // Assert ensures the balance is zero after withdrawal
+        assert(totalDonations == 0);
 
-        // Emit the event
-        emit Deposit(_amount);
+        emit FundsWithdrawn(msg.sender, previousBalance);
     }
 
-    error InsufficientBalance(uint256 balance, uint256 withdrawAmount);
+    // Function to update the withdrawal threshold (only by the owner)
+    function updateThreshold(uint256 _newThreshold) public {
+        require(msg.sender == owner, "Only the owner can update the threshold");
+        require(_newThreshold > 0, "Threshold must be greater than zero");
 
-    function withdraw(uint256 _withdrawAmount) public {
-        require(msg.sender == owner, "You are not the owner of this account");
-        uint _previousBalance = balance;
+        withdrawalThreshold = _newThreshold;
 
-        if (balance < _withdrawAmount) {
-            revert InsufficientBalance({
-                balance: balance,
-                withdrawAmount: _withdrawAmount
-            });
-        }
-
-        // Withdraw the given amount
-        balance -= _withdrawAmount;
-
-        // Assert the balance is correct
-        assert(balance == (_previousBalance - _withdrawAmount));
-
-        // Emit the event
-        emit Withdraw(_withdrawAmount);
+        emit ThresholdUpdated(_newThreshold);
     }
 
-    // Function to withdraw all ETH
-    function withdrawAll() public {
-        require(msg.sender == owner, "You are not the owner of this account");
+    // Function to get the current total donations
+    function getTotalDonations() public view returns (uint256) {
+        return totalDonations;
+    }
 
-        uint256 totalBalance = balance;
-        balance = 0;
-
-        // Assert all funds are withdrawn
-        assert(balance == 0);
-
-        // Emit the event
-        emit Withdraw(totalBalance);
+    // Function to get the donation amount of a specific donor
+    function getDonationOf(address _donor) public view returns (uint256) {
+        return donations[_donor];
     }
 }
