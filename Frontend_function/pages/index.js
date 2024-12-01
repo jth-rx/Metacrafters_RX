@@ -1,17 +1,20 @@
 import { useState, useEffect } from "react";
 import { ethers } from "ethers";
-import atm_abi from "../artifacts/contracts/Assessment.sol/Assessment.json";
+import fund_abi from "../artifacts/contracts/Assessment.sol/Assessment.json";
 
 export default function HomePage() {
   const [ethWallet, setEthWallet] = useState(undefined);
   const [account, setAccount] = useState(undefined);
-  const [atm, setATM] = useState(undefined);
-  const [balance, setBalance] = useState(undefined);
+  const [fund, setFund] = useState(undefined);
+  const [totalDonations, setTotalDonations] = useState(undefined);
   const [loading, setLoading] = useState(false);
+  const [customAmount, setCustomAmount] = useState("");
+  const [threshold, setThreshold] = useState("");
+  const [donorAddress, setDonorAddress] = useState("");
+  const [donorAmount, setDonorAmount] = useState(undefined);
 
   const contractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
-
-  const atmABI = atm_abi.abi;
+  const fundABI = fund_abi.abi;
 
   const getWallet = async () => {
     if (window.ethereum) {
@@ -19,15 +22,10 @@ export default function HomePage() {
       const account = await window.ethereum.request({ method: "eth_accounts" });
       handleAccount(account);
     }
-
-    if (ethWallet) {
-      const account = await ethWallet.request({ method: "eth_accounts" });
-      handleAccount(account);
-    }
   };
 
   const handleAccount = (account) => {
-    if (account) {
+    if (account.length > 0) {
       setAccount(account[0]);
     }
   };
@@ -40,117 +38,161 @@ export default function HomePage() {
 
     const accounts = await ethWallet.request({ method: "eth_requestAccounts" });
     handleAccount(accounts);
-
-    getATMContract();
+    getFundContract();
   };
 
-  const getATMContract = () => {
+  const getFundContract = () => {
     const provider = new ethers.providers.Web3Provider(ethWallet);
     const signer = provider.getSigner();
-    const atmContract = new ethers.Contract(contractAddress, atmABI, signer);
+    const fundContract = new ethers.Contract(contractAddress, fundABI, signer);
 
-    setATM(atmContract);
-    getBalance();
+    setFund(fundContract);
+    getTotalDonations();
   };
 
-  const getBalance = async () => {
-    if (atm) {
-      const balance = await atm.getBalance();
-      setBalance(balance.toNumber());
+  const getTotalDonations = async () => {
+    if (fund) {
+      const balance = await fund.getTotalDonations();
+      setTotalDonations(ethers.utils.formatEther(balance));
     }
   };
 
-  const deposit = async () => {
-    if (atm) {
-      setLoading(true);
-      let tx = await atm.deposit(1);
-      await tx.wait();
-      setLoading(false);
-      getBalance();
-    }
-  };
-
-  const withdraw = async () => {
-    if (atm) {
-      setLoading(true);
-      let tx = await atm.withdraw(1);
-      await tx.wait();
-      setLoading(false);
-      getBalance();
-    }
-  };
-
-  const withdrawAll = async () => {
-    if (atm) {
+  const donate = async () => {
+    if (fund) {
       setLoading(true);
       try {
-        // Call withdrawAll and set an explicit gasLimit if needed
-        let tx = await atm.withdrawAll({
-          gasLimit: 100000 // Adjust gas limit if needed
-        });
+        const tx = await fund.donate({ value: ethers.utils.parseEther("1") });
         await tx.wait();
-        setLoading(false);
-        getBalance(); // Update balance after withdrawal
+        getTotalDonations();
       } catch (error) {
-        setLoading(false);
-        console.error("Error during withdrawAll:", error);
+        console.error("Donation failed:", error);
+      }
+      setLoading(false);
+    }
+  };
+
+  const donateCustomAmount = async () => {
+    if (fund) {
+      setLoading(true);
+      try {
+        const tx = await fund.donate({ value: ethers.utils.parseEther(customAmount) });
+        await tx.wait();
+        setCustomAmount("");
+        getTotalDonations();
+      } catch (error) {
+        console.error("Donation failed:", error);
+      }
+      setLoading(false);
+    }
+  };
+
+  const withdrawFunds = async () => {
+    if (fund) {
+      setLoading(true);
+      try {
+        const tx = await fund.withdrawFunds();
+        await tx.wait();
+        getTotalDonations();
+      } catch (error) {
+        console.error("Withdrawal failed:", error);
+      }
+      setLoading(false);
+    }
+  };
+
+  const updateThreshold = async () => {
+    if (fund) {
+      setLoading(true);
+      try {
+        const tx = await fund.updateThreshold(ethers.utils.parseEther(threshold));
+        await tx.wait();
+        setThreshold("");
+        alert("Threshold updated successfully");
+      } catch (error) {
+        console.error("Threshold update failed:", error);
+      }
+      setLoading(false);
+    }
+  };
+
+  const getDonationOf = async () => {
+    if (fund && donorAddress) {
+      try {
+        const amount = await fund.getDonationOf(donorAddress);
+        setDonorAmount(ethers.utils.formatEther(amount));
+      } catch (error) {
+        console.error("Failed to get donor amount:", error);
       }
     }
   };
-  
 
-  // Logout function
   const logout = () => {
-    // Reset all relevant state to initial values
     setAccount(undefined);
-    setATM(undefined);
-    setBalance(undefined);
+    setFund(undefined);
+    setTotalDonations(undefined);
     setLoading(false);
     window.location.reload();
   };
 
-
   const initUser = () => {
     if (!ethWallet) {
-      return <p>Please install Metamask in order to use this ATM.</p>;
+      return <p>Please install MetaMask to use the Community Donation Fund.</p>;
     }
 
     if (!account) {
       return <button onClick={connectAccount} className="custom-button connect-button">Connect your MetaMask wallet</button>;
     }
 
-    if (balance === undefined) {
-      getBalance();
+    if (totalDonations === undefined) {
+      getTotalDonations();
     }
 
     return (
-      <div className="atm-dashboard">
+      <div className="fund-dashboard">
         <h2>Your Account: {account}</h2>
-        <h3>Your Balance: {balance} ETH</h3>
-        <div className="atm-buttons">
-          <button 
-            className="custom-button deposit-button" 
-            onClick={deposit} 
-            disabled={loading}
-          >
-            {loading ? "Processing..." : "Deposit 1 ETH"}
+        <h3>Total Donations: {totalDonations || 0} ETH</h3>
+        <div className="fund-buttons">
+          <button className="custom-button donate-button" onClick={donate} disabled={loading}>
+            {loading ? "Processing..." : "Donate 1 ETH"}
           </button>
-          <button 
-            className="custom-button withdraw-button" 
-            onClick={withdraw} 
-            disabled={loading}
-          >
-            {loading ? "Processing..." : "Withdraw 1 ETH"}
+          <br></br>
+          <input
+            type="text"
+            placeholder="Enter amount in ETH"
+            value={customAmount}
+            onChange={(e) => setCustomAmount(e.target.value)}
+            className="custom-inputethamount"
+          />
+          <button className="custom-donbutton donate-button" onClick={donateCustomAmount} disabled={loading || !customAmount}>
+            {loading ? "Processing..." : `Donate ${customAmount} ETH`}
           </button>
-          <button 
-            className="custom-button withdrawall-button" 
-            onClick={withdrawAll} 
-            disabled={loading}
-          >
-            {loading ? "Processing..." : "Withdraw All ETH"}
+          <button className="custom-button withdraw-button" onClick={withdrawFunds} disabled={loading}>
+            {loading ? "Processing..." : "Withdraw Funds"}
           </button>
-
-          <button onClick={logout} className="custom-button logout-button">Logout</button>
+          <br></br>
+          <input
+            type="text"
+            placeholder="New Threshold"
+            value={threshold}
+            onChange={(e) => setThreshold(e.target.value)}
+            className="custom-inputtreshhold"
+          />
+          <button onClick={updateThreshold} className="custom-treshholdbutton threshold-button" disabled={!threshold}>
+            Update Threshold
+          </button>
+          <br></br>
+          <input
+            type="text"
+            placeholder="Enter Donor Address"
+            value={donorAddress}
+            onChange={(e) => setDonorAddress(e.target.value)}
+            className="custom-inputaddress"
+          />
+          <button onClick={getDonationOf} className="custom-donoramount donation-check-button" disabled={!donorAddress}>
+            Check Donor Amount
+          </button>
+          {donorAmount && <p>Donor Amount: {donorAmount} ETH</p>}
+          <button onClick={logout} className="custom-donoramount logout-button">Logout</button>
         </div>
       </div>
     );
@@ -163,7 +205,7 @@ export default function HomePage() {
   return (
     <main className="container">
       <header>
-        <h1>Welcome to JethCoins ATM</h1>
+        <h1>Welcome to Binance's Crypto Donation Drive</h1>
       </header>
       {initUser()}
       <style global jsx>{`
@@ -185,10 +227,92 @@ export default function HomePage() {
           background-image: url('https://wallpapers.com/images/hd/yellow-techno-binance-al3wpn2n0ayuii90.jpg');
           background-size: cover;
           background-position: center;
+          text-align: center;
+        }
+
+        .custom-treshholdbutton{
+          width: 50%;
+          padding: 15px;
+          font-size: 1.1em;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          text-transform: uppercase;
+          font-weight: bold;
+          letter-spacing: 1px;
+          margin: 10px 0;
+          outline: none;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
+          .custom-checkdonorbutton{
+          width: 70%;
+          padding: 15px;
+          font-size: 1.1em;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          text-transform: uppercase;
+          font-weight: bold;
+          letter-spacing: 1px;
+          margin: 10px 0;
+          outline: none;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .custom-donbutton{
+          width: 70%;
+          padding: 15px;
+          font-size: 1.1em;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          text-transform: uppercase;
+          font-weight: bold;
+          letter-spacing: 1px;
+          margin: 10px 0;
+          outline: none;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .custom-donoramount{
+          width: 40%;
+          padding: 15px;
+          font-size: 1.1em;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          text-transform: uppercase;
+          font-weight: bold;
+          letter-spacing: 1px;
+          margin: 10px 0;
+          outline: none;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
         }
 
         .custom-button {
           width: 100%;
+          padding: 15px;
+          font-size: 1.1em;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          text-transform: uppercase;
+          font-weight: bold;
+          letter-spacing: 1px;
+          margin: 10px 0;
+          outline: none;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
+
+        .donate-button {
+          width: 50%;
           padding: 15px;
           font-size: 1.1em;
           border: none;
@@ -214,8 +338,19 @@ export default function HomePage() {
         }
 
         .withdraw-button {
-          background: linear-gradient(135deg, #f44336, #d32f2f);
-          color: white;
+          width: 50%;
+          padding: 15px;
+          font-size: 1.1em;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          text-transform: uppercase;
+          font-weight: bold;
+          letter-spacing: 1px;
+          margin: 10px 0;
+          outline: none;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
         }
 
         .withdrawall-button {
@@ -234,6 +369,30 @@ export default function HomePage() {
           transform: none;
           filter: none;
           box-shadow: none;
+        }
+          
+        .custom-inputethamount {
+          margin: 10px;
+          padding: 20px;
+          width: 80px;
+          border: 1px solid #ccc;
+          border-radius: 5px;
+        }
+
+        .custom-inputtreshhold {
+          margin: 10px;
+          padding: 20px;
+          width: 90px;
+          border: 1px solid #ccc;
+          border-radius: 5px;
+        }
+
+        .custom-inputaddress {
+          margin: 10px;
+          padding: 20px;
+          width: 285px;
+          border: 1px solid #ccc;
+          border-radius: 5px;
         }
 
         .atm-dashboard {
